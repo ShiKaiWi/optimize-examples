@@ -129,6 +129,7 @@ name = "optimize-examples"
 version = "0.1.0"
 dependencies = [
  "crossbeam",
+ "crossbeam-utils",
  "jemalloc-ctl",
  "jemallocator",
  "threadpool",
