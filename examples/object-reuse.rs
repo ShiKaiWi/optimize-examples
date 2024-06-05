@@ -8,6 +8,9 @@ use std::{
 use crossbeam::queue::SegQueue;
 use threadpool::ThreadPool;
 
+#[global_allocator]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
 const SMALL_SIZE: usize = 64 + 1;
 const MIDDLE_SIZE: usize = 512 + 1;
 const LARGE_SIZE: usize = 4 * 1024 + 1;
