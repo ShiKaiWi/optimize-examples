@@ -115,7 +115,7 @@ fn main() -> Result<(), String> {
 
     let instant = Instant::now();
     let num_threads = 4;
-    let num_tasks = 1024 * 128;
+    let num_tasks = 1024 * 1024;
     let data_size = 4096;
     let num_inserted_bytes = match mode.as_str() {
         MODE_PADDED => insert_into_padded_partitioned_buffer(num_threads, num_tasks, data_size),
