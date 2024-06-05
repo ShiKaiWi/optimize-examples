@@ -131,15 +131,12 @@ fn run_allocate_and_init(num_threads: usize, num_tasks: usize, num_alloc: usize)
 fn run_reuse_and_init(num_threads: usize, num_tasks: usize, num_alloc: usize) {
     let thread_pool = ThreadPool::new(num_threads);
     let allocated_bytes = Arc::new(AtomicUsize::new(0));
-    let mut pools = Vec::with_capacity(num_threads);
-    for _ in 0..num_threads {
-        pools.push(Arc::new(Pool::new()));
-    }
+    let pool = Arc::new(Pool::new());
 
     let start = Instant::now();
-    for idx in 0..num_tasks {
+    for _ in 0..num_tasks {
         let allocated_bytes = allocated_bytes.clone();
-        let pool = pools[idx % num_threads].clone();
+        let pool = pool.clone();
         thread_pool.execute(move || {
             let n = reuse_and_init(pool.as_ref(), num_alloc);
             allocated_bytes.fetch_add(n, std::sync::atomic::Ordering::Relaxed);
