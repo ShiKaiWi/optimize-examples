@@ -38,7 +38,7 @@ fn count_over_raw(num_tasks: usize, num_counts: usize) -> usize {
     let h1 = std::thread::spawn(move || {
         for _ in 0..num_tasks {
             for _ in 0..num_counts {
-                c1.c0.fetch_add(1, Ordering::Relaxed);
+                c1.c1.fetch_add(1, Ordering::Relaxed);
             }
         }
     });
@@ -67,7 +67,7 @@ fn count_over_padded(num_tasks: usize, num_counts: usize) -> usize {
     let h1 = std::thread::spawn(move || {
         for _ in 0..num_tasks {
             for _ in 0..num_counts {
-                c1.c0.fetch_add(1, Ordering::Relaxed);
+                c1.c1.fetch_add(1, Ordering::Relaxed);
             }
         }
     });
