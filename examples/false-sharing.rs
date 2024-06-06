@@ -30,15 +30,16 @@ fn count_over_raw(num_threads: usize, num_tasks: usize, num_counts: usize) -> us
     });
 
     for _ in 0..num_tasks {
-        let counter_set = counter_set.clone();
+        let c0 = counter_set.clone();
         thread_pool.execute(move || {
             for _ in 0..num_counts {
-                counter_set.c0.fetch_add(1, Ordering::Relaxed);
+                c0.c0.fetch_add(1, Ordering::Relaxed);
             }
         });
+        let c1 = counter_set.clone();
         thread_pool.execute(move || {
             for _ in 0..num_counts {
-                counter_set.c1.fetch_add(1, Ordering::Relaxed);
+                c1.c1.fetch_add(1, Ordering::Relaxed);
             }
         });
     }
@@ -56,15 +57,16 @@ fn count_over_padded(num_threads: usize, num_tasks: usize, num_counts: usize) ->
     });
 
     for _ in 0..num_tasks {
-        let counter_set = counter_set.clone();
+        let c0 = counter_set.clone();
         thread_pool.execute(move || {
             for _ in 0..num_counts {
-                counter_set.c0.fetch_add(1, Ordering::Relaxed);
+                c0.c0.fetch_add(1, Ordering::Relaxed);
             }
         });
+        let c1 = counter_set.clone();
         thread_pool.execute(move || {
             for _ in 0..num_counts {
-                counter_set.c1.fetch_add(1, Ordering::Relaxed);
+                c1.c1.fetch_add(1, Ordering::Relaxed);
             }
         });
     }
