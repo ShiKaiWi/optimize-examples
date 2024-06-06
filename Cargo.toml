@@ -11,3 +11,6 @@ crossbeam-utils = "0.8.19"
 jemalloc-ctl    = "0.3.2"
 jemallocator    = "0.3.2"
 threadpool      = "1.8.1"
+
+[profile.release]
+debug = true
