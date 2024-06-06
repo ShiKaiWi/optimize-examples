@@ -7,7 +7,6 @@ use std::{
     },
     time::Instant,
 };
-use threadpool::ThreadPool;
 
 const MODE_PADDED: &str = "padded";
 const MODE_RAW: &str = "raw";
@@ -22,56 +21,59 @@ struct PaddedCounterSet {
     c1: CachePadded<AtomicUsize>,
 }
 
-fn count_over_raw(num_threads: usize, num_tasks: usize, num_counts: usize) -> usize {
-    let thread_pool = ThreadPool::new(num_threads);
+fn count_over_raw(num_tasks: usize, num_counts: usize) -> usize {
     let counter_set = Arc::new(CounterSet {
         c0: AtomicUsize::new(0),
         c1: AtomicUsize::new(0),
     });
-
-    for _ in 0..num_tasks {
-        let c0 = counter_set.clone();
-        thread_pool.execute(move || {
+    let c0 = counter_set.clone();
+    let h0 = std::thread::spawn(move || {
+        for _ in 0..num_tasks {
             for _ in 0..num_counts {
                 c0.c0.fetch_add(1, Ordering::Relaxed);
             }
-        });
-        let c1 = counter_set.clone();
-        thread_pool.execute(move || {
+        }
+    });
+    let c1 = counter_set.clone();
+    let h1 = std::thread::spawn(move || {
+        for _ in 0..num_tasks {
             for _ in 0..num_counts {
-                c1.c1.fetch_add(1, Ordering::Relaxed);
+                c1.c0.fetch_add(1, Ordering::Relaxed);
             }
-        });
-    }
+        }
+    });
 
-    thread_pool.join();
+    h0.join().unwrap();
+    h1.join().unwrap();
 
     counter_set.c0.load(Ordering::Relaxed) + counter_set.c1.load(Ordering::Relaxed)
 }
 
-fn count_over_padded(num_threads: usize, num_tasks: usize, num_counts: usize) -> usize {
-    let thread_pool = ThreadPool::new(num_threads);
+fn count_over_padded(num_tasks: usize, num_counts: usize) -> usize {
     let counter_set = Arc::new(PaddedCounterSet {
         c0: CachePadded::new(AtomicUsize::new(0)),
         c1: CachePadded::new(AtomicUsize::new(0)),
     });
 
-    for _ in 0..num_tasks {
-        let c0 = counter_set.clone();
-        thread_pool.execute(move || {
+    let c0 = counter_set.clone();
+    let h0 = std::thread::spawn(move || {
+        for _ in 0..num_tasks {
             for _ in 0..num_counts {
                 c0.c0.fetch_add(1, Ordering::Relaxed);
             }
-        });
-        let c1 = counter_set.clone();
-        thread_pool.execute(move || {
+        }
+    });
+    let c1 = counter_set.clone();
+    let h1 = std::thread::spawn(move || {
+        for _ in 0..num_tasks {
             for _ in 0..num_counts {
-                c1.c1.fetch_add(1, Ordering::Relaxed);
+                c1.c0.fetch_add(1, Ordering::Relaxed);
             }
-        });
-    }
+        }
+    });
 
-    thread_pool.join();
+    h0.join().unwrap();
+    h1.join().unwrap();
 
     counter_set.c0.load(Ordering::Relaxed) + counter_set.c1.load(Ordering::Relaxed)
 }
@@ -83,12 +85,12 @@ fn main() -> Result<(), String> {
     };
 
     let instant = Instant::now();
-    let num_threads = 4;
     let num_tasks = 1024 * 64;
     let num_counts = 4096;
     let counts = match mode.as_str() {
-        MODE_PADDED => count_over_padded(num_threads, num_tasks, num_counts),
-        _ => count_over_raw(num_threads, num_tasks, num_counts),
+        MODE_PADDED => count_over_padded(num_tasks, num_counts),
+        MODE_RAW => count_over_raw(num_tasks, num_counts),
+        _ => panic!("invalid mode"),
     };
 
     println!("{mode} cost:{:?}, counts:{counts}", instant.elapsed());
